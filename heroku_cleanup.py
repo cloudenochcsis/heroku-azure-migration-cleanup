@@ -104,6 +104,40 @@ def delete_heroku_app(app_name: str) -> bool:
         print(f"Error deleting Heroku app: {e.stderr}")
         return False
 
+def process_single_app() -> bool:
+    """Process a single app deletion workflow."""
+    print("\n=== Processing New App ===")
+    
+    # Step 1: Check for custom domain
+    if check_custom_domain():
+        print("Custom domain detected. Skipping this app.")
+        return False
+    
+    # Step 2: Verify migration
+    botics_url = verify_migration()
+    if not botics_url:
+        return False
+    
+    # Step 3: Check app availability
+    if not check_app_availability(botics_url):
+        print("App is not reachable. Skipping this app.")
+        return False
+    
+    # Step 4: Final confirmation and deletion
+    app_name = botics_url.split('.')[0]  # Extract app name from URL
+    confirmation = get_user_input(f"\nThe app appears to be running correctly on Azure. Proceed with deleting Heroku app '{app_name}'? (yes/no): ")
+    
+    if confirmation == 'yes':
+        if delete_heroku_app(app_name):
+            print("Heroku app deletion completed successfully.")
+            return True
+        else:
+            print("Failed to delete Heroku app.")
+            return False
+    else:
+        print("Deletion cancelled by user.")
+        return False
+
 def main():
     # Load environment variables
     load_dotenv()
@@ -114,32 +148,15 @@ def main():
     if not check_heroku_auth():
         sys.exit(1)
     
-    # Step 1: Check for custom domain
-    if check_custom_domain():
-        print("Custom domain detected. Exiting without deletion.")
-        sys.exit(0)
-    
-    # Step 2: Verify migration
-    botics_url = verify_migration()
-    if not botics_url:
-        sys.exit(0)
-    
-    # Step 3: Check app availability
-    if not check_app_availability(botics_url):
-        print("App is not reachable. Exiting without deletion.")
-        sys.exit(0)
-    
-    # Step 4: Final confirmation and deletion
-    app_name = botics_url.split('.')[0]  # Extract app name from URL
-    confirmation = get_user_input(f"\nThe app appears to be running correctly on Azure. Proceed with deleting Heroku app '{app_name}'? (yes/no): ")
-    
-    if confirmation == 'yes':
-        if delete_heroku_app(app_name):
-            print("Heroku app deletion completed successfully.")
-        else:
-            print("Failed to delete Heroku app.")
-    else:
-        print("Deletion cancelled by user.")
+    while True:
+        # Process a single app
+        process_single_app()
+        
+        # Ask if user wants to process another app
+        continue_deletion = get_user_input("\nDo you want to process another app? (yes/no): ")
+        if continue_deletion != 'yes':
+            print("\nThank you for using the Heroku App Deletion Safety Check!")
+            break
 
 if __name__ == "__main__":
     main() 
