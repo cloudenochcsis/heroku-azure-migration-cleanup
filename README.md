@@ -1,6 +1,6 @@
 # Heroku App Deletion Safety Check
 
-This script helps safely delete Heroku applications after verifying they've been successfully migrated to Azure. It includes multiple safety checks and user confirmations to prevent accidental deletions.
+This script helps safely delete Heroku applications after verifying they've been successfully migrated to Azure. It includes multiple safety checks and user confirmations to prevent accidental deletions. The script supports processing multiple apps in a single session.
 
 ## Prerequisites
 
@@ -29,7 +29,7 @@ Run the script:
 python heroku_cleanup.py
 ```
 
-The script will guide you through the following steps:
+The script will guide you through the following steps for each app:
 
 1. Heroku Authentication Check
    - Verifies you're logged in to Heroku CLI
@@ -37,28 +37,47 @@ The script will guide you through the following steps:
 
 2. Custom Domain Check
    - Confirms if the app has a custom domain
-   - Exits if a custom domain is detected
+   - Skips the app if a custom domain is detected
 
 3. Migration Confirmation
    - Verifies if the app has been migrated to Azure
    - Requests the original .botics.co URL
 
 4. Ping Check
+   - Verifies basic network connectivity
+   - Displays ping results
+
+5. HTTP Check
    - Verifies the app is reachable at the provided URL
    - Displays response status and headers
 
-5. Final Deletion
+6. Final Deletion
    - Requests final confirmation before deletion
    - Deletes the Heroku app if confirmed
+
+7. Continue Option
+   - After each app is processed, asks if you want to process another app
+   - Allows you to delete multiple apps in one session
+   - Exit the script when you're done
+
+## Multi-App Processing
+
+The script supports processing multiple apps in a single session:
+- After each app is processed (whether deleted or skipped), you'll be asked if you want to process another app
+- You can continue processing apps until you're done
+- Each app is processed independently with its own set of checks
+- You can exit the script at any time by answering 'no' to the continue prompt
 
 ## Safety Features
 
 - Multiple confirmation steps
 - Custom domain detection
 - Migration verification
-- URL availability check
+- Network connectivity check (ping)
+- HTTP availability check
 - Final confirmation before deletion
 - Detailed error messages and status updates
+- Independent processing of each app
 
 ## Error Handling
 
@@ -67,6 +86,8 @@ The script includes comprehensive error handling for:
 - Network connectivity issues
 - Invalid app names
 - Failed deletion attempts
+- Failed ping attempts
+- HTTP request failures
 
 ## Note
 
